@@ -54,6 +54,15 @@ function initiativeRoll(combatant, rollCb) {
 }
 
 Hooks.on('init', () => {
+  game.settings.register(MODULE, "applyInitiativeToNewCombatant", {
+    name: "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantName",
+    hint: "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantHint",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true
+  });
+
   /** @type {Function} */
   const originalFetInitiativeRoll = CONFIG.Combatant.documentClass.prototype.getInitiativeRoll;
   /** @this {Combatant} */
@@ -62,6 +71,27 @@ Hooks.on('init', () => {
       return originalFetInitiativeRoll.call(this, ...args)
     }
     return initiativeRoll(this, () => originalFetInitiativeRoll.call(this, ...args));
+  }
+});
+
+// Automatically apply initiative to new combatants if enabled
+Hooks.on('preCreateCombatant', (combatant, data, options, userId) => {
+  if (!game.user.isGM) return;
+  if (!game.settings.get(MODULE, 'applyInitiativeToNewCombatant')) return;
+  
+  const combat = combatant.combat;
+  if (!combat || (combat.getFlag(MODULE, 'disabled') ?? false)) return;
+  if (combatant.actor?.type !== 'npc') return;
+
+  const baseUuid = combatant.token?.baseActor.uuid;
+  if (!baseUuid) return;
+
+  for (const c of combat.combatants.values()) {
+    if (typeof c.initiative !== 'number') continue;
+    if (c.token?.baseActor.uuid === baseUuid) {
+      combatant.updateSource({ initiative: c.initiative });
+      break;
+    }
   }
 });
 

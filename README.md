@@ -4,6 +4,7 @@ A Foundry VTT module that ensures NPCs of the same type share the same initiativ
 
 Thanks to TPNils for his excellent work on the "Shared NPC Initiative" module, which was the basis for this module.
 https://foundryvtt.com/packages/shared-npc-initiative
+
 I fixed some bugs, improved styling and added new functionality.
 
 ## Features

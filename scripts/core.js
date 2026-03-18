@@ -18,8 +18,8 @@ function initiativeRoll(combatant, rollCb) {
   }
   combatant.combat[cache] ??= {};
   
-  const baseUuid = combatant.token?.baseActor.uuid;
-  if (!baseUuid) {
+  const actorId = combatant.actorId;
+  if (!actorId) {
     // placeholder combatants, maybe also other usecases?
     return rollCb();
   }
@@ -27,7 +27,7 @@ function initiativeRoll(combatant, rollCb) {
     if (typeof c.initiative !== 'number') {
       continue;
     }
-    if (c.token?.baseActor.uuid === baseUuid) {
+    if (c.actorId === actorId) {
       // Purely visual so the user doesn't think the roll happened twice
       // Can't rely on it though as this sync function can be called before the first async roll resolved
       // This method is also persistent
@@ -36,12 +36,12 @@ function initiativeRoll(combatant, rollCb) {
   }
 
   // Account for initiativeRoll calls happening before the first was resolved
-  if (!combatant.combat[cache][baseUuid]) {
-    combatant.combat[cache][baseUuid] = rollCb();
+  if (!combatant.combat[cache][actorId]) {
+    combatant.combat[cache][actorId] = rollCb();
     /** @type {Function} */
-    const evaluate = combatant.combat[cache][baseUuid].evaluate;
+    const evaluate = combatant.combat[cache][actorId].evaluate;
     let firstResponse;
-    combatant.combat[cache][baseUuid].evaluate = function(...args) {
+    combatant.combat[cache][actorId].evaluate = function(...args) {
       if (!firstResponse) {
         firstResponse = evaluate.call(this, args);
       }
@@ -49,28 +49,21 @@ function initiativeRoll(combatant, rollCb) {
     }
   }
   /** @type {Roll} */
-  const roll = combatant.combat[cache][baseUuid];
+  const roll = combatant.combat[cache][actorId];
   return roll;
 }
 
-Hooks.on('init', () => {
-  game.settings.register(MODULE, "applyInitiativeToNewCombatant", {
-    name: "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantName",
-    hint: "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantHint",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: true
-  });
+Hooks.once('init', () => {
+  console.log(`${MODULE} | Initializing hooks and overrides`);
 
   /** @type {Function} */
-  const originalFetInitiativeRoll = CONFIG.Combatant.documentClass.prototype.getInitiativeRoll;
+  const originalGetInitiativeRoll = CONFIG.Combatant.documentClass.prototype.getInitiativeRoll;
   /** @this {Combatant} */
   CONFIG.Combatant.documentClass.prototype.getInitiativeRoll = function(...args) {
     if (this.actor?.type !== 'npc') {
-      return originalFetInitiativeRoll.call(this, ...args)
+      return originalGetInitiativeRoll.call(this, ...args)
     }
-    return initiativeRoll(this, () => originalFetInitiativeRoll.call(this, ...args));
+    return initiativeRoll(this, () => originalGetInitiativeRoll.call(this, ...args));
   }
 });
 
@@ -83,12 +76,12 @@ Hooks.on('preCreateCombatant', (combatant, data, options, userId) => {
   if (!combat || (combat.getFlag(MODULE, 'disabled') ?? false)) return;
   if (combatant.actor?.type !== 'npc') return;
 
-  const baseUuid = combatant.token?.baseActor.uuid;
-  if (!baseUuid) return;
+  const actorId = combatant.actorId;
+  if (!actorId) return;
 
   for (const c of combat.combatants.values()) {
     if (typeof c.initiative !== 'number') continue;
-    if (c.token?.baseActor.uuid === baseUuid) {
+    if (c.actorId === actorId) {
       combatant.updateSource({ initiative: c.initiative });
       break;
     }
@@ -102,22 +95,22 @@ Hooks.on('deleteCombatant', (combatant, options, userId) => {
     return;
   }
 
-  const baseUuid = combatant.token?.baseActor.uuid;
-  if (!baseUuid) {
+  const actorId = combatant.actorId;
+  if (!actorId) {
     return;
   }
 
-  // Check if any other combatants with the same baseUuid remain in combat
+  // Check if any other combatants with the same actorId remain in combat
   let hasRemainingCombatant = false;
   for (const c of combat.combatants.values()) {
-    if (c.token?.baseActor.uuid === baseUuid) {
+    if (c.actorId === actorId) {
       hasRemainingCombatant = true;
       break;
     }
   }
 
-  // If no combatants with this baseUuid remain, clear the cache entry
-  if (!hasRemainingCombatant && combat[cache]?.[baseUuid]) {
-    delete combat[cache][baseUuid];
+  // If no combatants with this actorId remain, clear the cache entry
+  if (!hasRemainingCombatant && combat[cache]?.[actorId]) {
+    delete combat[cache][actorId];
   }
 });

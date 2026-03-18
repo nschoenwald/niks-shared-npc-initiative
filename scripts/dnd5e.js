@@ -34,12 +34,12 @@ Hooks.on(`dnd5e.preConfigureInitiative`, (/** @type {Actor} */actor, /** @type {
       return;
     }
   }
-  let worldActor = actor.isToken ? actor.token?.baseActor : actor;
+  const actorId = actor.isToken ? actor.token.actorId : actor.id;
   for (const combatant of game.combat.combatants.values()) {
     if (typeof combatant.initiative !== 'number') {
       continue;
     }
-    if (combatant.token?.baseActor.uuid === worldActor.uuid) {
+    if (combatant.actorId === actorId) {
       rollData.options.fixed = combatant.initiative;
       return;
     }

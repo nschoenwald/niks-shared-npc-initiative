@@ -1,4 +1,4 @@
-import { MODULE } from "./const.js";
+import { MODULE, log } from "./const.js";
 
 const cache = Symbol('niks-shared-npc-initiative cache')
 
@@ -28,6 +28,7 @@ function initiativeRoll(combatant, rollCb) {
       continue;
     }
     if (c.actorId === actorId) {
+      log(`Using cached initiative ${c.initiative} for Actor ${c.actor.name} (${actorId}) from Combatant ${c.id}`);
       // Purely visual so the user doesn't think the roll happened twice
       // Can't rely on it though as this sync function can be called before the first async roll resolved
       // This method is also persistent
@@ -37,6 +38,7 @@ function initiativeRoll(combatant, rollCb) {
 
   // Account for initiativeRoll calls happening before the first was resolved
   if (!combatant.combat[cache][actorId]) {
+    log(`Rolling new initiative for Actor ${combatant.actor.name} (${actorId})`);
     combatant.combat[cache][actorId] = rollCb();
     /** @type {Function} */
     const evaluate = combatant.combat[cache][actorId].evaluate;
@@ -54,7 +56,7 @@ function initiativeRoll(combatant, rollCb) {
 }
 
 Hooks.once('init', () => {
-  console.log(`${MODULE} | Initializing hooks and overrides`);
+  log(`Initializing hooks and overrides`);
 
   /** @type {Function} */
   const originalGetInitiativeRoll = CONFIG.Combatant.documentClass.prototype.getInitiativeRoll;
@@ -82,6 +84,7 @@ Hooks.on('preCreateCombatant', (combatant, data, options, userId) => {
   for (const c of combat.combatants.values()) {
     if (typeof c.initiative !== 'number') continue;
     if (c.actorId === actorId) {
+      log(`Automatically applying initiative ${c.initiative} to new combatant ${combatant.name} (Actor ${actorId})`);
       combatant.updateSource({ initiative: c.initiative });
       break;
     }

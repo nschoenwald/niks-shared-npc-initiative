@@ -1,0 +1,4 @@
+{
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleLabel": "Group NPC Initiative",
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleTooltip": "Enable/Disable shared initiative for NPCs of the same type in this combat."
+}

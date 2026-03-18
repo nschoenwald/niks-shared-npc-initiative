@@ -1,0 +1,1 @@
+export const MODULE = `niks-shared-npc-initiative`;

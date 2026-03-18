@@ -1,0 +1,58 @@
+{
+  "id": "niks-shared-npc-initiative",
+  "title": "Nik's Shared NPC initiative",
+  "version": "13.01",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "description": "",
+  "authors": [
+    {
+      "name": "nikolai.sw"
+    }
+  ],
+  "url": "https://github.com/nschoenwald/niks-shared-npc-initiative",
+  "manifest": "https://github.com/nschoenwald/niks-shared-npc-initiative/releases/download/latest/module.json",
+  "download": "https://github.com/nschoenwald/niks-shared-npc-initiative/releases/download/v1.1.1/module.zip",
+  "bugs": "",
+  "flags": {
+    "hbsFiles": []
+  },
+  "esmodules": [
+    "scripts/index.js"
+  ],
+  "styles": [
+    "styles/style.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "relationships": {
+    "requires": [],
+    "recommends": [],
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "5.0.0",
+          "verified": "5.0.4"
+        }
+      },
+      {
+        "id": "pf1",
+        "type": "system",
+        "compatibility": {
+          "minimum": "11",
+          "verified": "11.8"
+        }
+      }
+    ]
+  },
+  "socket": false
+}

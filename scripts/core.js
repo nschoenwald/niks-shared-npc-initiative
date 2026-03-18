@@ -1,6 +1,24 @@
-import { MODULE, log } from "./const.js";
+import { MODULE, log, INITIATIVE_MAP } from "./const.js";
 
 const cache = Symbol('niks-shared-npc-initiative cache')
+
+/**
+ * Get or create the initiative map for a combat.
+ * @param {Combat} combat 
+ * @returns {Map<string, number>}
+ */
+export function getInitiativeMap(combat) {
+  if (combat[INITIATIVE_MAP]) return combat[INITIATIVE_MAP];
+  
+  const map = new Map();
+  for (const c of combat.combatants.values()) {
+    if (typeof c.initiative === 'number' && c.actorId) {
+      map.set(c.actorId, c.initiative);
+    }
+  }
+  combat[INITIATIVE_MAP] = map;
+  return map;
+}
 
 /** 
  * @param {Combatant} combatant
@@ -23,17 +41,12 @@ function initiativeRoll(combatant, rollCb) {
     // placeholder combatants, maybe also other usecases?
     return rollCb();
   }
-  for (const c of combatant.combat.combatants.values()) {
-    if (typeof c.initiative !== 'number') {
-      continue;
-    }
-    if (c.actorId === actorId) {
-      log(`Using cached initiative ${c.initiative} for Actor ${c.actor.name} (${actorId}) from Combatant ${c.id}`);
-      // Purely visual so the user doesn't think the roll happened twice
-      // Can't rely on it though as this sync function can be called before the first async roll resolved
-      // This method is also persistent
-      return new Roll(`${c.initiative}`);
-    }
+
+  const map = getInitiativeMap(combatant.combat);
+  if (map.has(actorId)) {
+    const initiative = map.get(actorId);
+    log(`Using cached initiative ${initiative} for Actor ${combatant.actor.name} (${actorId}) from Lookup Map`);
+    return new Roll(`${initiative}`);
   }
 
   // Account for initiativeRoll calls happening before the first was resolved
@@ -81,12 +94,23 @@ Hooks.on('preCreateCombatant', (combatant, data, options, userId) => {
   const actorId = combatant.actorId;
   if (!actorId) return;
 
-  for (const c of combat.combatants.values()) {
-    if (typeof c.initiative !== 'number') continue;
-    if (c.actorId === actorId) {
-      log(`Automatically applying initiative ${c.initiative} to new combatant ${combatant.name} (Actor ${actorId})`);
-      combatant.updateSource({ initiative: c.initiative });
-      break;
+  const map = getInitiativeMap(combat);
+  if (map.has(actorId)) {
+    const initiative = map.get(actorId);
+    log(`Automatically applying initiative ${initiative} to new combatant ${combatant.name} (Actor ${actorId}) from Lookup Map`);
+    combatant.updateSource({ initiative: initiative });
+  }
+});
+
+// Update the cache whenever a combatant's initiative changes
+Hooks.on('updateCombatant', (combatant, data, options, userId) => {
+  if (data.initiative === undefined || !combatant.actorId) return;
+  const map = combatant.combat[INITIATIVE_MAP];
+  if (map) {
+    if (data.initiative === null) {
+      map.delete(combatant.actorId);
+    } else {
+      map.set(combatant.actorId, data.initiative);
     }
   }
 });
@@ -112,8 +136,14 @@ Hooks.on('deleteCombatant', (combatant, options, userId) => {
     }
   }
 
-  // If no combatants with this actorId remain, clear the cache entry
-  if (!hasRemainingCombatant && combat[cache]?.[actorId]) {
-    delete combat[cache][actorId];
+  // If no combatants with this actorId remain, clear the cache entries
+  if (!hasRemainingCombatant) {
+    if (combat[cache]?.[actorId]) {
+      delete combat[cache][actorId];
+    }
+    const map = combat[INITIATIVE_MAP];
+    if (map) {
+      map.delete(actorId);
+    }
   }
 });

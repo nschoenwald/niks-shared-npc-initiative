@@ -1,4 +1,5 @@
 export const MODULE = `niks-shared-npc-initiative`;
+export const INITIATIVE_MAP = Symbol('niks-shared-npc-initiative initiativeMap');
 
 /**
  * Log a message to the console if debug logging is enabled.

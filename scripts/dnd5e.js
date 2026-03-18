@@ -1,4 +1,5 @@
 import { MODULE } from "./const.js";
+import { getInitiativeMap } from "./core.js";
 
 /**
  * @typedef {object} InitiativeRollDataOptions
@@ -28,20 +29,12 @@ Hooks.on(`dnd5e.preConfigureInitiative`, (/** @type {Actor} */actor, /** @type {
     // disabled
     return;
   }
-  for (const combatant of game.combat.combatants.values()) {
-    if (combatant.actor?.uuid === actor.uuid && typeof combatant.initiative === 'number') {
-      // re-roll initiative
-      return;
-    }
-  }
+
+  const map = getInitiativeMap(game.combat);
   const actorId = actor.isToken ? actor.token.actorId : actor.id;
-  for (const combatant of game.combat.combatants.values()) {
-    if (typeof combatant.initiative !== 'number') {
-      continue;
-    }
-    if (combatant.actorId === actorId) {
-      rollData.options.fixed = combatant.initiative;
-      return;
-    }
+
+  if (map.has(actorId)) {
+    rollData.options.fixed = map.get(actorId);
+    return;
   }
 })

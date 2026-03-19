@@ -6,6 +6,15 @@ import './dnd5e.js';
 // console.log(`${MODULE} | Loading index.js`); // Silent until settings are ready
 
 Hooks.once('init', () => {
+  game.settings.register(MODULE, "debug", {
+    name: game.i18n.localize("NIKS_SHARED_NPC_INITIATIVE.DebugName") || "Enable Debug Logging",
+    hint: game.i18n.localize("NIKS_SHARED_NPC_INITIATIVE.DebugHint") || "If enabled, the module will print debug information to the console.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
   log(`Registering settings in index.js`);
   game.settings.register(MODULE, "applyInitiativeToNewCombatant", {
     name: game.i18n.localize("NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantName") || "Apply Initiative to New Combatant",
@@ -14,14 +23,5 @@ Hooks.once('init', () => {
     config: true,
     type: Boolean,
     default: true
-  });
-
-  game.settings.register(MODULE, "debug", {
-    name: game.i18n.localize("NIKS_SHARED_NPC_INITIATIVE.DebugName") || "Enable Debug Logging",
-    hint: game.i18n.localize("NIKS_SHARED_NPC_INITIATIVE.DebugHint") || "If enabled, the module will print debug information to the console.",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: false
   });
 });

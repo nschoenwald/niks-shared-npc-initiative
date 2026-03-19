@@ -7,7 +7,13 @@ export const INITIATIVE_MAP = Symbol('niks-shared-npc-initiative initiativeMap')
  * @param {boolean} [force=false] - If true, log the message even if debug is disabled.
  */
 export function log(message, force = false) {
-  if (force || game.settings.get(MODULE, 'debug')) {
+  let isDebug = false;
+  try {
+    isDebug = game.settings.get(MODULE, 'debug');
+  } catch (e) {
+    // Setting might not be registered yet
+  }
+  if (force || isDebug) {
     console.log(`${MODULE} | ${message}`);
   }
 }

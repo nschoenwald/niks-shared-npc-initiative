@@ -20,7 +20,12 @@ import { getInitiativeMap } from "./core.js";
  * @property {Actor} subject
  */
 
-// Skip the roll prompt for dnd5e
+// Skip the roll prompt for dnd5e by setting a fixed initiative value
+// when the actor's group already has one.
+// Note: This uses game.combat (the currently viewed combat) because the
+// dnd5e.preConfigureInitiative hook only provides the actor, not the combat.
+// This is correct in the vast majority of cases, but could theoretically
+// produce wrong results if multiple combats are active simultaneously.
 Hooks.on(`dnd5e.preConfigureInitiative`, (/** @type {Actor} */actor, /** @type {InitiativeRollData} */rollData) => {
   if (actor.type !== 'npc' || !game.combat) {
     return;
@@ -31,6 +36,10 @@ Hooks.on(`dnd5e.preConfigureInitiative`, (/** @type {Actor} */actor, /** @type {
   }
 
   const map = getInitiativeMap(game.combat);
+
+  // For unlinked tokens, actor.isToken is true and actor.token.actorId gives
+  // the base sidebar actor ID. For linked tokens or sidebar actors, actor.id
+  // is already the correct identifier.
   const actorId = actor.isToken ? actor.token.actorId : actor.id;
 
   if (map.has(actorId)) {

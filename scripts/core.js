@@ -1,6 +1,4 @@
-import { MODULE, log, INITIATIVE_MAP } from "./const.js";
-
-const cache = Symbol('niks-shared-npc-initiative cache')
+import { MODULE, log, INITIATIVE_MAP, ROLL_CACHE } from "./const.js";
 
 /**
  * Get or create the initiative map for a combat.
@@ -31,10 +29,14 @@ function initiativeRoll(combatant, rollCb) {
     return rollCb();
   }
   if (typeof combatant.initiative === 'number') {
-    // re-roll initiative
+    // Re-rolling initiative: clear the stale roll cache for this actor
+    const actorId = combatant.actorId;
+    if (actorId && combatant.combat[ROLL_CACHE]?.[actorId]) {
+      delete combatant.combat[ROLL_CACHE][actorId];
+    }
     return rollCb();
   }
-  combatant.combat[cache] ??= {};
+  combatant.combat[ROLL_CACHE] ??= {};
   
   const actorId = combatant.actorId;
   if (!actorId) {
@@ -50,21 +52,21 @@ function initiativeRoll(combatant, rollCb) {
   }
 
   // Account for initiativeRoll calls happening before the first was resolved
-  if (!combatant.combat[cache][actorId]) {
+  if (!combatant.combat[ROLL_CACHE][actorId]) {
     log(`Rolling new initiative for Actor ${combatant.actor.name} (${actorId})`);
-    combatant.combat[cache][actorId] = rollCb();
+    combatant.combat[ROLL_CACHE][actorId] = rollCb();
     /** @type {Function} */
-    const evaluate = combatant.combat[cache][actorId].evaluate;
+    const evaluate = combatant.combat[ROLL_CACHE][actorId].evaluate;
     let firstResponse;
-    combatant.combat[cache][actorId].evaluate = function(...args) {
+    combatant.combat[ROLL_CACHE][actorId].evaluate = function(...args) {
       if (!firstResponse) {
-        firstResponse = evaluate.call(this, args);
+        firstResponse = evaluate.call(this, ...args);
       }
       return firstResponse;
     }
   }
   /** @type {Roll} */
-  const roll = combatant.combat[cache][actorId];
+  const roll = combatant.combat[ROLL_CACHE][actorId];
   return roll;
 }
 
@@ -115,7 +117,7 @@ Hooks.on('updateCombatant', (combatant, data, options, userId) => {
   }
 });
 
-// Clear cache when the last combatant with a given baseUuid is removed
+// Clear cache when the last combatant with a given actorId is removed
 Hooks.on('deleteCombatant', (combatant, options, userId) => {
   const combat = combatant.combat;
   if (!combat) {
@@ -127,10 +129,12 @@ Hooks.on('deleteCombatant', (combatant, options, userId) => {
     return;
   }
 
-  // Check if any other combatants with the same actorId remain in combat
+  // Check if any other combatants with the same actorId remain in combat.
+  // Filter out the deleted combatant itself, as it may still be in the collection
+  // at the time this hook fires.
   let hasRemainingCombatant = false;
   for (const c of combat.combatants.values()) {
-    if (c.actorId === actorId) {
+    if (c.id !== combatant.id && c.actorId === actorId) {
       hasRemainingCombatant = true;
       break;
     }
@@ -138,8 +142,8 @@ Hooks.on('deleteCombatant', (combatant, options, userId) => {
 
   // If no combatants with this actorId remain, clear the cache entries
   if (!hasRemainingCombatant) {
-    if (combat[cache]?.[actorId]) {
-      delete combat[cache][actorId];
+    if (combat[ROLL_CACHE]?.[actorId]) {
+      delete combat[ROLL_CACHE][actorId];
     }
     const map = combat[INITIATIVE_MAP];
     if (map) {

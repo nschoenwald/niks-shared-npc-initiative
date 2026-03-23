@@ -1,5 +1,6 @@
 export const MODULE = `niks-shared-npc-initiative`;
 export const INITIATIVE_MAP = Symbol('niks-shared-npc-initiative initiativeMap');
+export const ROLL_CACHE = Symbol('niks-shared-npc-initiative rollCache');
 
 /**
  * Log a message to the console if debug logging is enabled.

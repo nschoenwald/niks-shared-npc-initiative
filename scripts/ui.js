@@ -1,6 +1,8 @@
 import { MODULE } from "./const.js";
 
 Hooks.on('renderCombatTracker', (combatTracker, /**@type {HTMLElement}*/htmlElement, data) => {
+  if (!game.user.isGM) return;
+
   const combat = game.combat;
   if (!combat) {
     return;

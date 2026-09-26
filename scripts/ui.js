@@ -1,15 +1,18 @@
 import { MODULE } from "./const.js";
 
-Hooks.on('renderCombatTracker', (combatTracker, /**@type {HTMLElement}*/htmlElement, context, options) => {
+Hooks.on('renderCombatTracker', (combatTracker, htmlElement, context, options) => {
   if (!game.user.isGM) return;
 
-  const combat = game.combat;
+  const combat = combatTracker.viewed ?? game.combat;
   if (!combat) {
     return;
   }
 
+  const root = htmlElement instanceof HTMLElement ? htmlElement : htmlElement?.[0];
+  if (!root) return;
+
   // Prevent duplicate toggles
-  if (htmlElement.querySelector('.niks-shared-npc-initiative-toggle')) {
+  if (root.querySelector('.niks-shared-npc-initiative-toggle')) {
     return;
   }
 
@@ -46,10 +49,9 @@ Hooks.on('renderCombatTracker', (combatTracker, /**@type {HTMLElement}*/htmlElem
   toggleLabel.append(labelText, toggleInput);
   toggleContainer.append(toggleLabel);
 
-  // Try multiple selectors to support both V13 (.combat-tracker-header) and V14 DOM structures
-  const htmlHeader = htmlElement.querySelector('.combat-tracker-header')
-    ?? htmlElement.querySelector('#combat-tracker header')
-    ?? htmlElement.querySelector('header');
+  const htmlHeader = root.querySelector('.combat-tracker-header')
+    ?? root.querySelector('#combat-tracker header')
+    ?? root.querySelector('header');
   if (htmlHeader) {
     htmlHeader.append(toggleContainer);
   }

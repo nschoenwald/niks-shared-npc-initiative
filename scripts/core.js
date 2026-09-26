@@ -24,8 +24,8 @@ export function getInitiativeMap(combat) {
  * @returns {Roll}
  */
 function initiativeRoll(combatant, rollCb) {
-  if (combatant.combat.getFlag(MODULE, 'disabled') ?? false) {
-    // disabled
+  if (!combatant.combat || (combatant.combat.getFlag(MODULE, 'disabled') ?? false)) {
+    // disabled or not in combat
     return rollCb();
   }
   if (typeof combatant.initiative === 'number') {
@@ -48,7 +48,7 @@ function initiativeRoll(combatant, rollCb) {
   if (map.has(actorId)) {
     const initiative = map.get(actorId);
     log(`Using cached initiative ${initiative} for Actor ${combatant.actor.name} (${actorId}) from Lookup Map`);
-    return new Roll(`${initiative}`);
+    return foundry.dice.Roll.create(`${initiative}`);
   }
 
   // Account for initiativeRoll calls happening before the first was resolved
@@ -107,13 +107,18 @@ Hooks.on('preCreateCombatant', (combatant, data, options, userId) => {
 // Update the cache whenever a combatant's initiative changes
 Hooks.on('updateCombatant', (combatant, data, options, userId) => {
   if (data.initiative === undefined || !combatant.actorId) return;
-  const map = combatant.combat[INITIATIVE_MAP];
+  const combat = combatant.combat;
+  if (!combat) return;
+  const map = combat[INITIATIVE_MAP];
   if (map) {
     if (data.initiative === null) {
       map.delete(combatant.actorId);
     } else {
       map.set(combatant.actorId, data.initiative);
     }
+  }
+  if (data.initiative === null && combat[ROLL_CACHE]?.[combatant.actorId]) {
+    delete combat[ROLL_CACHE][combatant.actorId];
   }
 });
 

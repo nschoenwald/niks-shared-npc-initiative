@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [14.2] - 2026-09-26
+## [14.2.0] - 2026-09-26
 
 ### Breaking Changes & Compatibility
 - **Foundry VTT V14 Exclusive**: Upgraded compatibility strictly to Foundry Virtual Tabletop Version 14+. Dropped legacy support for Foundry V13.

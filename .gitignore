@@ -3,3 +3,8 @@ lang/.gitkeep
 styles/.gitkeep
 module.zip
 module.zip
+
+# Markdown: ignore all, except the docs shipped with the module
+*.md
+!README.md
+!CHANGELOG.md

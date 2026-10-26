@@ -12,14 +12,15 @@ I fixed some bugs, improved styling and added new functionality.
 ## Compatibility
 - **Foundry VTT**: Version 14
 - **Systems**: **DnD5e (6.x)**
+- **Optional**: [libWrapper](https://foundryvtt.com/packages/lib-wrapper), used automatically when active
 ---
 
 ## Features
 
 ### Group NPC Initiative
-- **Dynamic Grouping**: All NPCs derived from the same Sidebar Actor (identified by `actorId`) automatically share their initiative.
+- **Dynamic Grouping**: All NPCs derived from the same Sidebar Actor (identified by `actorId`) automatically share their initiative. Grouping can alternatively split by initiative bonus or group by combatant name (see **Group NPCs By**).
 - **Roll Once**: Rolling initiative for one NPC in the group applies that score to all other NPCs of the same type in the same combat.
-- **Visual Sync**: Built-in support to prevent redundant roll animations while keeping the values synchronized.
+- **One Message per Group**: A group rolled together posts a single chat message (and a single Dice So Nice animation) instead of one identical message per NPC.
 - **Seamless Dialog Bypassing**: When rolling an individual NPC whose group already has an initiative value, DnD5e's roll configuration dialog is automatically bypassed with the group's score.
 
 ### Auto-Apply to New Combatants
@@ -27,20 +28,31 @@ I fixed some bugs, improved styling and added new functionality.
 - **Configurable**: This behavior can be toggled via a world setting (enabled by default).
 
 ### Combat Tracker Controls
-- **Toggle per Combat**: A "Group NPC Initiative" toggle is added directly to the Combat Tracker header, allowing GMs to enable or disable grouping for specific encounters on the fly.
+- **Toggle per Combat**: A "Group NPC Initiative" toggle is added directly to the Combat Tracker header, allowing GMs to enable or disable grouping for specific encounters on the fly. Whether new combats start with it on or off is configurable.
 - **DnD5e 6.x Coordination**: Disabling the toggle on a combat automatically disables DnD5e 6.x's native initiative grouping for that encounter as well.
 
+### DnD5e's own "Group Initiative Rolls" vs. this module
+DnD5e 6.x has its own system setting that rolls once for identical tokens. The two work together, but differ:
+- **DnD5e** groups tokens with the same base actor *and* the same roll formula, and only before the combat has started.
+- **This module** groups according to **Group NPCs By**, at any time during combat, and also hands the group's value to NPCs that join later.
+
+You can use either one or both. Switching this module's toggle off for a combat also switches DnD5e's grouping off for that combat.
+
 ## Settings
+- **Enabled for New Combats**: (World, Boolean, default: true) Whether the "Group NPC Initiative" toggle starts switched on for newly created combats.
+- **Group NPCs By**: (World, Choice, default: Base actor) Which NPCs share initiative: *Base actor*, *Base actor and initiative bonus*, or *Combatant name*.
 - **Apply Initiative to New Combatant**: (World, Boolean, default: true) Automatically apply the current initiative of other combatants of the same actor type to any new combatant added to the combat tracker.
 - **Enable Debug Logging**: (World, Boolean, default: false) Output diagnostic logs to the developer console.
 
 ## How it Works
 The module works by:
-1. Identifying NPCs using their `actorId` (linking unlinked tokens to their base actor).
+1. Identifying NPC groups by a key built from the **Group NPCs By** setting: the `actorId` (linking unlinked tokens to their base actor), optionally combined with `system.attributes.init.total`, or the combatant name.
 2. Coordinating with DnD5e 6.x's `Combatant5e#getInitiativeGroupingKey` and `dnd5e.preConfigureInitiative` hook to harmonize group rolls and bypass prompts.
-3. Overriding `Combatant#getInitiativeRoll` to return the group's existing roll if available using V14 `foundry.dice.Roll.create`.
-4. Hooking into `preCreateCombatant` to inject the group's initiative into newly added combatants before creation.
-5. Adding an ApplicationV2-compatible UI toggle to the `CombatTracker` to store a `disabled` flag on the `Combat` document.
+3. Overriding `Combatant#getInitiativeRoll` to return the group's existing initiative (looked up live from the combat's combatants) using V14 `foundry.dice.Roll.create`, or a single shared pending roll while the group is being rolled. Re-rolling a combatant that already has a value always performs a fresh roll.
+4. Hooking into `preCreateCombatant` to inject the group's initiative into newly added combatants before creation (combatants created with an initiative already set keep it).
+5. Adding an ApplicationV2-compatible UI toggle to the `CombatTracker` to store a `disabled` flag on the `Combat` document (pre-set in `preCreateCombat` when **Enabled for New Combats** is off).
+6. Flagging every chat message after the first one created from a shared roll, and dropping those in `preCreateChatMessage`.
+7. Registering method overrides through libWrapper (`MIXED`) when it is active, and wrapping the prototype directly otherwise.
 
 ---
 **Author**: nikolai.sw

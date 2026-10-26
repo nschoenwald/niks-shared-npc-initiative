@@ -1,6 +1,13 @@
 {
   "NIKS_SHARED_NPC_INITIATIVE.ToggleLabel": "Group NPC Initiative",
   "NIKS_SHARED_NPC_INITIATIVE.ToggleTooltip": "Enable/Disable shared initiative for NPCs of the same type in this combat.",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultName": "Enabled for New Combats",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultHint": "Whether \"Group NPC Initiative\" starts switched on for newly created combats. Existing combats keep their current toggle.",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByName": "Group NPCs By",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByHint": "Which NPCs share an initiative value. \"Base actor\" groups all tokens made from the same sidebar actor. \"Base actor and initiative bonus\" additionally splits off tokens whose initiative bonus differs (e.g. a boss variant). \"Combatant name\" groups NPCs with identical names, even across different actors.",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByActor": "Base actor",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByInitiative": "Base actor and initiative bonus",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByCombatantName": "Combatant name",
   "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantName": "Apply Initiative to New Combatant",
   "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantHint": "Automatically apply the current initiative of other combatants of the same actor type to any new combatant added to the combattracker.",
   "NIKS_SHARED_NPC_INITIATIVE.DebugName": "Enable Debug Logging",

@@ -1,5 +1,5 @@
-import { MODULE } from "./const.js";
-import { getInitiativeMap } from "./core.js";
+import { wrapMethod } from "./const.js";
+import { getGroupInitiative, getGroupKey, isDisabled } from "./core.js";
 
 /**
  * Skip the roll prompt for dnd5e by setting a fixed initiative value
@@ -10,42 +10,36 @@ Hooks.on("dnd5e.preConfigureInitiative", (actor, rollData) => {
     return;
   }
 
-  // Resolve the relevant combat for this actor, supporting multi-combat scenes
-  const combat = (actor.isToken && actor.token?.combatant?.combat)
-    ?? game.combats?.find(c => c.combatants.some(cbt => (actor.isToken ? cbt.tokenId === actor.token?.id : cbt.actorId === actor.id)))
-    ?? game.combat;
-
-  if (!combat || (combat.getFlag(MODULE, "disabled") ?? false)) {
+  // Resolve the relevant combat for this actor, preferring the active one and supporting multi-combat scenes.
+  // getCombatantsByActor resolves unlinked token actors to their token's combatants.
+  let combat = game.combat;
+  if (!combat?.getCombatantsByActor(actor).length) {
+    combat = game.combats.find(c => c.getCombatantsByActor(actor).length);
+  }
+  if (!combat || isDisabled(combat)) {
     return;
   }
 
-  const map = getInitiativeMap(combat);
+  // Only share when something still needs a value; re-rolling an existing initiative stays a real roll
+  const combatant = combat.getCombatantsByActor(actor).find(c => c.initiative === null);
+  if (!combatant) return;
 
-  // For unlinked tokens, actor.isToken is true and actor.token.actorId gives
-  // the base sidebar actor ID. For linked tokens or sidebar actors, actor.id
-  // is already the correct identifier.
-  const actorId = actor.isToken ? actor.token?.actorId : actor.id;
-  if (!actorId) return;
-
-  if (map.has(actorId)) {
+  const initiative = getGroupInitiative(combat, getGroupKey(combatant), combatant.id);
+  if (initiative !== null) {
     rollData.options ??= {};
-    rollData.options.fixed = map.get(actorId);
+    rollData.options.fixed = initiative;
   }
 });
 
 /**
  * Ensure DnD5e 6.x native initiative grouping respects this module's per-combat toggle.
  * If grouping is disabled for a combat, Combatant5e#getInitiativeGroupingKey returns null.
+ * Called from the module's init hook.
  */
-Hooks.once("init", () => {
-  const CombatantClass = CONFIG.Combatant.documentClass;
-  if (CombatantClass?.prototype?.getInitiativeGroupingKey) {
-    const originalGetInitiativeGroupingKey = CombatantClass.prototype.getInitiativeGroupingKey;
-    CombatantClass.prototype.getInitiativeGroupingKey = function(...args) {
-      if (this.combat?.getFlag(MODULE, "disabled")) {
-        return null;
-      }
-      return originalGetInitiativeGroupingKey.call(this, ...args);
-    };
-  }
-});
+export function wrapGroupingKey() {
+  if (!CONFIG.Combatant.documentClass.prototype.getInitiativeGroupingKey) return;
+  wrapMethod('CONFIG.Combatant.documentClass.prototype.getInitiativeGroupingKey', function(wrapped, ...args) {
+    if (this.combat && isDisabled(this.combat)) return null;
+    return wrapped(...args);
+  });
+}

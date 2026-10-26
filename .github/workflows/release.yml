@@ -18,6 +18,22 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Verify module.json version matches tag
+        run: |
+          MODULE_VERSION=$(jq -r .version module.json)
+          TAG_VERSION="${{ steps.get_version.outputs.VERSION }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          if [ "$MODULE_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::module.json version ($MODULE_VERSION) does not match release tag ($TAG_VERSION)"
+            exit 1
+          fi
+
+      - name: Check syntax and lint
+        run: |
+          for f in scripts/*.js; do node --check "$f"; done
+          jq empty module.json lang/*.json
+          npx --yes eslint@9 scripts/
+
       - name: Update module.json download URL
         run: |
           jq --arg url "https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/module.zip" '.download = $url' module.json > tmp.json && mv tmp.json module.json

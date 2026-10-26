@@ -1,32 +1,26 @@
 import { MODULE } from "./const.js";
+import { isDisabled } from "./core.js";
 
-Hooks.on('renderCombatTracker', (combatTracker, htmlElement, context, options) => {
+Hooks.on('renderCombatTracker', (combatTracker, root) => {
   if (!game.user.isGM) return;
 
-  const combat = combatTracker.viewed ?? game.combat;
-  if (!combat) {
-    return;
-  }
+  const combat = combatTracker.viewed;
+  // Remove a toggle left over from a previous render, so its state and combat reference never go stale
+  root.querySelector('.niks-shared-npc-initiative-toggle')?.remove();
+  if (!combat) return;
 
-  const root = htmlElement instanceof HTMLElement ? htmlElement : htmlElement?.[0];
-  if (!root) return;
-
-  // Prevent duplicate toggles
-  if (root.querySelector('.niks-shared-npc-initiative-toggle')) {
-    return;
-  }
-
-  const isDisabled = combat.getFlag(MODULE, 'disabled') ?? false;
+  const htmlHeader = root.querySelector('.combat-tracker-header');
+  if (!htmlHeader) return;
 
   const toggleContainer = document.createElement('div');
   toggleContainer.classList.add('niks-shared-npc-initiative-toggle');
 
   const toggleLabel = document.createElement('label');
-  toggleLabel.title = game.i18n.localize('NIKS_SHARED_NPC_INITIATIVE.ToggleTooltip');
+  toggleLabel.dataset.tooltip = game.i18n.localize('NIKS_SHARED_NPC_INITIATIVE.ToggleTooltip');
 
   const toggleInput = document.createElement('input');
   toggleInput.setAttribute('type', 'checkbox');
-  toggleInput.checked = !isDisabled;
+  toggleInput.checked = !isDisabled(combat);
 
   toggleInput.addEventListener('change', async () => {
     toggleInput.disabled = true;
@@ -37,22 +31,7 @@ Hooks.on('renderCombatTracker', (combatTracker, htmlElement, context, options) =
     }
   });
 
-  let labelText;
-  if (game.i18n.has('NIKS_SHARED_NPC_INITIATIVE.ToggleLabel')) {
-    labelText = game.i18n.localize('NIKS_SHARED_NPC_INITIATIVE.ToggleLabel');
-  } else if (game.i18n.has('TYPES.Actor.group') && game.i18n.has('DND5E.NPC.Label')) {
-    labelText = `${game.i18n.format('TYPES.Actor.group')} ${game.i18n.format('DND5E.NPC.Label')}`;
-  } else {
-    labelText = 'Group NPC Initiative';
-  }
-
-  toggleLabel.append(labelText, toggleInput);
+  toggleLabel.append(game.i18n.localize('NIKS_SHARED_NPC_INITIATIVE.ToggleLabel'), toggleInput);
   toggleContainer.append(toggleLabel);
-
-  const htmlHeader = root.querySelector('.combat-tracker-header')
-    ?? root.querySelector('#combat-tracker header')
-    ?? root.querySelector('header');
-  if (htmlHeader) {
-    htmlHeader.append(toggleContainer);
-  }
+  htmlHeader.append(toggleContainer);
 });

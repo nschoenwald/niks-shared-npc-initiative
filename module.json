@@ -1,7 +1,7 @@
 {
   "id": "niks-shared-npc-initiative",
   "title": "Nik's Shared NPC initiative",
-  "version": "14.2.0",
+  "version": "14.3.0",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -16,9 +16,6 @@
   "manifest": "https://github.com/nschoenwald/niks-shared-npc-initiative/releases/latest/download/module.json",
   "download": "https://github.com/nschoenwald/niks-shared-npc-initiative/releases/latest/download/module.zip",
   "bugs": "https://github.com/nschoenwald/niks-shared-npc-initiative/issues",
-  "flags": {
-    "hbsFiles": []
-  },
   "esmodules": [
     "scripts/index.js"
   ],
@@ -34,7 +31,13 @@
   ],
   "relationships": {
     "requires": [],
-    "recommends": [],
+    "recommends": [
+      {
+        "id": "lib-wrapper",
+        "type": "module",
+        "reason": "Optional. When active, the module's method overrides go through libWrapper to avoid conflicts with other combat modules."
+      }
+    ],
     "systems": [
       {
         "id": "dnd5e",

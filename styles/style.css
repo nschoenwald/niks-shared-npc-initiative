@@ -1,10 +1,11 @@
+/* Theme variables resolve against the tracker's own theme (Core Interface in the sidebar, Core Apps when popped out) */
 .niks-shared-npc-initiative-toggle {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border-bottom: 1px solid var(--color-border-light-2, var(--color-border-light, #b5b3a4));
-  background: rgba(0, 0, 0, 0.05);
+  gap: var(--element-spacing-half, 4px);
+  padding: var(--element-spacing-half, 4px) 0;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-primary);
   font-size: var(--font-size-12);
 }
 

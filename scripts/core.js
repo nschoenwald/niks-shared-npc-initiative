@@ -1,158 +1,159 @@
-import { MODULE, log, INITIATIVE_MAP, ROLL_CACHE } from "./const.js";
+import { MODULE, log, ROLL_CACHE, cachedSettings, wrapMethod } from "./const.js";
 
 /**
- * Get or create the initiative map for a combat.
- * @param {Combat} combat 
- * @returns {Map<string, number>}
+ * Whether shared initiative is disabled for a combat.
+ * @param {Combat} combat
+ * @returns {boolean}
  */
-export function getInitiativeMap(combat) {
-  if (combat[INITIATIVE_MAP]) return combat[INITIATIVE_MAP];
-  
-  const map = new Map();
-  for (const c of combat.combatants.values()) {
-    if (typeof c.initiative === 'number' && c.actorId) {
-      map.set(c.actorId, c.initiative);
-    }
-  }
-  combat[INITIATIVE_MAP] = map;
-  return map;
+export function isDisabled(combat) {
+  return combat.getFlag(MODULE, 'disabled') ?? false;
 }
 
-/** 
+/**
+ * The key of the group a combatant shares initiative with, depending on the "Group NPCs By" setting.
+ * @param {Combatant} combatant
+ * @returns {string|null} - null for combatants that can't be grouped (e.g. placeholders without an actor).
+ */
+export function getGroupKey(combatant) {
+  const actorId = combatant.actorId;
+  if (!actorId) return null;
+  switch (cachedSettings.groupBy) {
+    case 'name': return `name:${combatant.name}`;
+    case 'initiative': return `${actorId}:${combatant.actor?.system.attributes?.init?.total ?? ''}`;
+    default: return actorId;
+  }
+}
+
+/**
+ * Find the initiative already held by another NPC of the same group.
+ * Scanned on demand so the value can never go stale; combats are small enough that this is cheap.
+ * @param {Combat} combat
+ * @param {string|null} key - The group key, see getGroupKey.
+ * @param {string} [excludeId] - A combatant id to ignore (e.g. the one being rolled).
+ * @returns {number|null}
+ */
+export function getGroupInitiative(combat, key, excludeId) {
+  if (!key) return null;
+  for (const c of combat.combatants) {
+    if (c.id === excludeId || !Number.isFinite(c.initiative) || c.actor?.type !== 'npc') continue;
+    if (getGroupKey(c) === key) return c.initiative;
+  }
+  return null;
+}
+
+/**
+ * Get the pending (shared) roll cache of a combat.
+ * @param {Combat} combat
+ * @returns {Map<string, Roll>}
+ */
+function getRollCache(combat) {
+  return combat[ROLL_CACHE] ??= new Map();
+}
+
+/**
+ * Make a roll shareable between several combatants: it is evaluated once, and only the first
+ * chat message created from it is posted (later ones are flagged and dropped in preCreateChatMessage).
+ * @param {Roll} roll
+ */
+function makeShared(roll) {
+  const evaluate = roll.evaluate;
+  let firstResponse;
+  roll.evaluate = function(...args) {
+    return firstResponse ??= evaluate.call(this, ...args);
+  };
+
+  const toMessage = roll.toMessage;
+  let posted = false;
+  roll.toMessage = function(messageData = {}, ...args) {
+    if (posted) foundry.utils.setProperty(messageData, `flags.${MODULE}.duplicate`, true);
+    posted = true;
+    return toMessage.call(this, messageData, ...args);
+  };
+}
+
+/**
  * @param {Combatant} combatant
  * @param {() => Roll} rollCb
  * @returns {Roll}
  */
 function initiativeRoll(combatant, rollCb) {
-  if (!combatant.combat || (combatant.combat.getFlag(MODULE, 'disabled') ?? false)) {
-    // disabled or not in combat
+  const combat = combatant.combat;
+  // Not in combat, disabled, or re-rolling an existing value
+  if (!combat || isDisabled(combat) || Number.isFinite(combatant.initiative)) {
     return rollCb();
   }
-  if (typeof combatant.initiative === 'number') {
-    // Re-rolling initiative: clear the stale roll cache for this actor
-    const actorId = combatant.actorId;
-    if (actorId && combatant.combat[ROLL_CACHE]?.[actorId]) {
-      delete combatant.combat[ROLL_CACHE][actorId];
-    }
-    return rollCb();
-  }
-  combatant.combat[ROLL_CACHE] ??= {};
-  
-  const actorId = combatant.actorId;
-  if (!actorId) {
-    // placeholder combatants, maybe also other usecases?
-    return rollCb();
-  }
+  const key = getGroupKey(combatant);
+  if (!key) return rollCb();
 
-  const map = getInitiativeMap(combatant.combat);
-  if (map.has(actorId)) {
-    const initiative = map.get(actorId);
-    log(`Using cached initiative ${initiative} for Actor ${combatant.actor.name} (${actorId}) from Lookup Map`);
+  const initiative = getGroupInitiative(combat, key, combatant.id);
+  if (initiative !== null) {
+    log(`Using shared initiative ${initiative} for ${combatant.name} (group ${key})`);
     return foundry.dice.Roll.create(`${initiative}`);
   }
 
   // Account for initiativeRoll calls happening before the first was resolved
-  if (!combatant.combat[ROLL_CACHE][actorId]) {
-    log(`Rolling new initiative for Actor ${combatant.actor.name} (${actorId})`);
-    combatant.combat[ROLL_CACHE][actorId] = rollCb();
-    /** @type {Function} */
-    const evaluate = combatant.combat[ROLL_CACHE][actorId].evaluate;
-    let firstResponse;
-    combatant.combat[ROLL_CACHE][actorId].evaluate = function(...args) {
-      if (!firstResponse) {
-        firstResponse = evaluate.call(this, ...args);
-      }
-      return firstResponse;
-    }
+  const cache = getRollCache(combat);
+  let roll = cache.get(key);
+  if (!roll) {
+    log(`Rolling new initiative for ${combatant.name} (group ${key})`);
+    roll = rollCb();
+    makeShared(roll);
+    cache.set(key, roll);
   }
-  /** @type {Roll} */
-  const roll = combatant.combat[ROLL_CACHE][actorId];
   return roll;
 }
 
-Hooks.once('init', () => {
-  log(`Initializing hooks and overrides`);
+/**
+ * Wrap Combatant#getInitiativeRoll. Called from the module's init hook, after settings are registered.
+ */
+export function wrapInitiativeRoll() {
+  log(`Wrapping Combatant#getInitiativeRoll`);
+  wrapMethod('CONFIG.Combatant.documentClass.prototype.getInitiativeRoll', function(wrapped, ...args) {
+    if (this.actor?.type !== 'npc') return wrapped(...args);
+    return initiativeRoll(this, () => wrapped(...args));
+  });
+}
 
-  /** @type {Function} */
-  const originalGetInitiativeRoll = CONFIG.Combatant.documentClass.prototype.getInitiativeRoll;
-  /** @this {Combatant} */
-  CONFIG.Combatant.documentClass.prototype.getInitiativeRoll = function(...args) {
-    if (this.actor?.type !== 'npc') {
-      return originalGetInitiativeRoll.call(this, ...args)
-    }
-    return initiativeRoll(this, () => originalGetInitiativeRoll.call(this, ...args));
-  }
+// Start new combats with grouping on or off, according to the "Enabled for New Combats" setting
+Hooks.on('preCreateCombat', (combat) => {
+  if (game.settings.get(MODULE, 'enabledByDefault')) return;
+  if (combat.getFlag(MODULE, 'disabled') !== undefined) return;
+  combat.updateSource({ [`flags.${MODULE}.disabled`]: true });
 });
 
 // Automatically apply initiative to new combatants if enabled
-Hooks.on('preCreateCombatant', (combatant, data, options, userId) => {
-  if (!game.user.isGM) return;
+Hooks.on('preCreateCombatant', (combatant) => {
   if (!game.settings.get(MODULE, 'applyInitiativeToNewCombatant')) return;
-  
+  if (Number.isFinite(combatant.initiative)) return;
+
   const combat = combatant.combat;
-  if (!combat || (combat.getFlag(MODULE, 'disabled') ?? false)) return;
+  if (!combat || isDisabled(combat)) return;
   if (combatant.actor?.type !== 'npc') return;
 
-  const actorId = combatant.actorId;
-  if (!actorId) return;
-
-  const map = getInitiativeMap(combat);
-  if (map.has(actorId)) {
-    const initiative = map.get(actorId);
-    log(`Automatically applying initiative ${initiative} to new combatant ${combatant.name} (Actor ${actorId}) from Lookup Map`);
-    combatant.updateSource({ initiative: initiative });
+  const initiative = getGroupInitiative(combat, getGroupKey(combatant));
+  if (initiative !== null) {
+    log(`Automatically applying initiative ${initiative} to new combatant ${combatant.name}`);
+    combatant.updateSource({ initiative });
   }
 });
 
-// Update the cache whenever a combatant's initiative changes
-Hooks.on('updateCombatant', (combatant, data, options, userId) => {
-  if (data.initiative === undefined || !combatant.actorId) return;
-  const combat = combatant.combat;
-  if (!combat) return;
-  const map = combat[INITIATIVE_MAP];
-  if (map) {
-    if (data.initiative === null) {
-      map.delete(combatant.actorId);
-    } else {
-      map.set(combatant.actorId, data.initiative);
-    }
-  }
-  if (data.initiative === null && combat[ROLL_CACHE]?.[combatant.actorId]) {
-    delete combat[ROLL_CACHE][combatant.actorId];
-  }
+// Only post one chat message for a roll shared by a group
+Hooks.on('preCreateChatMessage', (message) => {
+  if (message.getFlag(MODULE, 'duplicate')) return false;
 });
 
-// Clear cache when the last combatant with a given actorId is removed
-Hooks.on('deleteCombatant', (combatant, options, userId) => {
-  const combat = combatant.combat;
-  if (!combat) {
-    return;
-  }
+/**
+ * Drop the pending shared roll of a combatant's group, so the next roll starts fresh.
+ * @param {Combatant} combatant
+ */
+function clearPendingRoll(combatant) {
+  const key = getGroupKey(combatant);
+  if (key) combatant.combat?.[ROLL_CACHE]?.delete(key);
+}
 
-  const actorId = combatant.actorId;
-  if (!actorId) {
-    return;
-  }
-
-  // Check if any other combatants with the same actorId remain in combat.
-  // Filter out the deleted combatant itself, as it may still be in the collection
-  // at the time this hook fires.
-  let hasRemainingCombatant = false;
-  for (const c of combat.combatants.values()) {
-    if (c.id !== combatant.id && c.actorId === actorId) {
-      hasRemainingCombatant = true;
-      break;
-    }
-  }
-
-  // If no combatants with this actorId remain, clear the cache entries
-  if (!hasRemainingCombatant) {
-    if (combat[ROLL_CACHE]?.[actorId]) {
-      delete combat[ROLL_CACHE][actorId];
-    }
-    const map = combat[INITIATIVE_MAP];
-    if (map) {
-      map.delete(actorId);
-    }
-  }
+// Once an initiative value is written (or cleared), the pending roll is no longer needed
+Hooks.on('updateCombatant', (combatant, changed) => {
+  if ('initiative' in changed) clearPendingRoll(combatant);
 });
+
+Hooks.on('deleteCombatant', clearPendingRoll);

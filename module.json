@@ -4,7 +4,8 @@
   "version": "14.4.0",
   "compatibility": {
     "minimum": "14",
-    "verified": "14"
+    "verified": "14",
+    "maximum": "14"
   },
   "description": "Ensures NPCs of the same type share initiative in combat. Roll once, and all NPCs of that type get the same value.",
   "authors": [

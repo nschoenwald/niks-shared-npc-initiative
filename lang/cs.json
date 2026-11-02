@@ -1,0 +1,15 @@
+{
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleLabel": "Seskupit iniciativu CP",
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleTooltip": "Zapne/vypne společnou iniciativu pro CP stejného typu v tomto souboji.",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultName": "Zapnuto pro nové souboje",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultHint": "Zda je „Seskupit iniciativu CP“ v nově vytvořených soubojích na začátku zapnuto. Stávající souboje si ponechají aktuální nastavení.",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByName": "Seskupit CP podle",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByHint": "Které CP sdílejí hodnotu iniciativy. „Základní aktér“ seskupí všechny žetony vytvořené ze stejného aktéra v postranním panelu. „Základní aktér a bonus iniciativy“ navíc oddělí žetony s odlišným bonusem iniciativy (např. variantu bosse). „Jméno účastníka souboje“ seskupí CP se stejným jménem, i když pocházejí z různých aktérů.",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByActor": "Základní aktér",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByInitiative": "Základní aktér a bonus iniciativy",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByCombatantName": "Jméno účastníka souboje",
+  "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantName": "Použít iniciativu u nových účastníků",
+  "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantHint": "Automaticky přiřadí aktuální iniciativu ostatních účastníků stejného typu aktéra každému novému účastníkovi přidanému do sledování souboje.",
+  "NIKS_SHARED_NPC_INITIATIVE.DebugName": "Zapnout ladicí výpisy",
+  "NIKS_SHARED_NPC_INITIATIVE.DebugHint": "Je-li zapnuto, modul vypisuje ladicí informace do konzole."
+}

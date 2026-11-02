@@ -1,0 +1,15 @@
+{
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleLabel": "Agrupar iniciativa de PNJ",
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleTooltip": "Activa/desactiva la iniciativa compartida para los PNJ del mismo tipo en este combate.",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultName": "Activado en combates nuevos",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultHint": "Si «Agrupar iniciativa de PNJ» empieza activado en los combates recién creados. Los combates existentes conservan su ajuste actual.",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByName": "Agrupar PNJ por",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByHint": "Qué PNJ comparten un valor de iniciativa. «Actor base» agrupa todas las fichas creadas a partir del mismo actor de la barra lateral. «Actor base y bonificador de iniciativa» además separa las fichas cuyo bonificador de iniciativa es distinto (p. ej., una variante jefe). «Nombre del combatiente» agrupa a los PNJ con nombres idénticos, incluso si provienen de actores distintos.",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByActor": "Actor base",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByInitiative": "Actor base y bonificador de iniciativa",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByCombatantName": "Nombre del combatiente",
+  "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantName": "Aplicar iniciativa a nuevos combatientes",
+  "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantHint": "Aplica automáticamente la iniciativa actual de otros combatientes del mismo tipo de actor a cualquier combatiente nuevo añadido al registro de combate.",
+  "NIKS_SHARED_NPC_INITIATIVE.DebugName": "Activar registro de depuración",
+  "NIKS_SHARED_NPC_INITIATIVE.DebugHint": "Si está activado, el módulo mostrará información de depuración en la consola."
+}

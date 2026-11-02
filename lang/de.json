@@ -1,0 +1,15 @@
+{
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleLabel": "NSC-Initiative gruppieren",
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleTooltip": "Gemeinsame Initiative für NSC desselben Typs in diesem Kampf ein-/ausschalten.",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultName": "Für neue Kämpfe aktiviert",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultHint": "Ob „NSC-Initiative gruppieren“ bei neu erstellten Kämpfen eingeschaltet startet. Bestehende Kämpfe behalten ihre aktuelle Einstellung.",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByName": "NSC gruppieren nach",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByHint": "Welche NSC sich einen Initiativewert teilen. „Basis-Akteur“ gruppiert alle Token, die aus demselben Akteur der Seitenleiste erstellt wurden. „Basis-Akteur und Initiativebonus“ trennt zusätzlich Token mit abweichendem Initiativebonus ab (z. B. eine Boss-Variante). „Name des Kampfteilnehmers“ gruppiert NSC mit identischem Namen, auch über verschiedene Akteure hinweg.",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByActor": "Basis-Akteur",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByInitiative": "Basis-Akteur und Initiativebonus",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByCombatantName": "Name des Kampfteilnehmers",
+  "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantName": "Initiative auf neue Kampfteilnehmer übertragen",
+  "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantHint": "Überträgt die aktuelle Initiative anderer Kampfteilnehmer desselben Akteurtyps automatisch auf jeden neuen Kampfteilnehmer im Kampftracker.",
+  "NIKS_SHARED_NPC_INITIATIVE.DebugName": "Debug-Protokollierung aktivieren",
+  "NIKS_SHARED_NPC_INITIATIVE.DebugHint": "Wenn aktiviert, gibt das Modul Debug-Informationen in der Konsole aus."
+}

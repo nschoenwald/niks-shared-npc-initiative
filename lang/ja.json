@@ -1,0 +1,15 @@
+{
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleLabel": "NPCイニシアチブをグループ化",
+  "NIKS_SHARED_NPC_INITIATIVE.ToggleTooltip": "この戦闘で同じ種類のNPCのイニシアチブ共有を有効/無効にします。",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultName": "新しい戦闘で有効",
+  "NIKS_SHARED_NPC_INITIATIVE.EnabledByDefaultHint": "新しく作成した戦闘で「NPCイニシアチブをグループ化」を最初からオンにするかどうか。既存の戦闘は現在の設定を維持します。",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByName": "NPCのグループ化基準",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByHint": "どのNPCがイニシアチブ値を共有するか。「元のアクター」はサイドバーの同じアクターから作られたすべてのトークンをまとめます。「元のアクターとイニシアチブ・ボーナス」はさらに、イニシアチブ・ボーナスが異なるトークン（ボス版など）を分けます。「戦闘参加者名」は、異なるアクターでも同じ名前のNPCをまとめます。",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByActor": "元のアクター",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByInitiative": "元のアクターとイニシアチブ・ボーナス",
+  "NIKS_SHARED_NPC_INITIATIVE.GroupByCombatantName": "戦闘参加者名",
+  "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantName": "新しい戦闘参加者にイニシアチブを適用",
+  "NIKS_SHARED_NPC_INITIATIVE.ApplyInitiativeToNewCombatantHint": "戦闘トラッカーに追加された新しい戦闘参加者に、同じアクター種別の他の参加者の現在のイニシアチブを自動的に適用します。",
+  "NIKS_SHARED_NPC_INITIATIVE.DebugName": "デバッグログを有効化",
+  "NIKS_SHARED_NPC_INITIATIVE.DebugHint": "有効にすると、モジュールがデバッグ情報をコンソールに出力します。"
+}

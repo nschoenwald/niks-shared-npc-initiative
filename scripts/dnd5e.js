@@ -39,7 +39,10 @@ Hooks.on("dnd5e.preConfigureInitiative", (actor, rollData) => {
 export function wrapGroupingKey() {
   if (!CONFIG.Combatant.documentClass.prototype.getInitiativeGroupingKey) return;
   wrapMethod('CONFIG.Combatant.documentClass.prototype.getInitiativeGroupingKey', function(wrapped, ...args) {
+    // Call the original first, so other modules' wrappers of this method still run (libWrapper reports a conflict
+    // when a wrapper returns without calling it). Grouping can only be switched off here, never on.
+    const key = wrapped(...args);
     if (this.combat && isDisabled(this.combat)) return null;
-    return wrapped(...args);
+    return key;
   });
 }

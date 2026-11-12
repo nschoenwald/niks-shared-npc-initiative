@@ -1,7 +1,7 @@
 {
   "id": "niks-shared-npc-initiative",
   "title": "Nik's Shared NPC initiative",
-  "version": "14.4.2",
+  "version": "14.4.3",
   "compatibility": {
     "minimum": "14",
     "verified": "14",
@@ -50,7 +50,7 @@
         "type": "system",
         "compatibility": {
           "minimum": "6.0.0",
-          "verified": "6.0.5"
+          "verified": "6.1.0"
         }
       }
     ]

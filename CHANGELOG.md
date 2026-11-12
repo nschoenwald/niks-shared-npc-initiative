@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.4.3] - 2026-11-12
+### Changed
+- Verified with D&D 5e 6.1. Nothing changes in how the module works.
+
 ## [14.4.2] - 2026-11-07
 ### Fixed
 - Works more smoothly alongside other modules that change how D&D 5e groups combatants in the combat tracker, so libWrapper no longer warns about a possible conflict. Nothing changes in how grouping works.

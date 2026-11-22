@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.5.0] - 2026-11-22
+### Added
+- **French translation**: The module is now available in French, reviewed by Kameleau. Thank you!
+
 ## [14.4.3] - 2026-11-12
 ### Changed
 - Verified with D&D 5e 6.1. Nothing changes in how the module works.
